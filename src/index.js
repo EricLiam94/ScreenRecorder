@@ -1,3 +1,4 @@
+const isDev = require("electron-is-dev");
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 
@@ -21,7 +22,9 @@ const createWindow = () => {
   mainWindow.loadFile(path.join(__dirname, "index.html"));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 };
 
 // This method will be called when Electron has finished

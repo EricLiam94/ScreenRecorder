@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0" />
+    <title>Client:View</title>
+
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"
+    ></script>
+  </head>
+  <body>
+    <h1>Welcome to my stream</h1>
+    <video id="stream" autoplay="true" muted="muted"></video>
+    <script>
+      const videoElem = document.getElementById("stream");
+      const socket = io.connect("http://localhost:4000");
+      socket.on("welcome", data => {
+        console.log(data);
+      });
+      socket.on("broadcast", data => {
+        const blob = new Blob([data], {
+          type: "video/webm; codecs=vp9"
+        });
+        console.log(blob);
+        videoElem.src = URL.createObjectURL(blob);
+        videoElem.loop = true;
+        videoElem.play();
+      });
+    </script>
+  </body>
+</html>

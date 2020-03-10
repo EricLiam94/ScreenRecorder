@@ -2,6 +2,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Simple Screen Recorder</title>
+
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
@@ -11,6 +12,7 @@
   </head>
   <body class="content">
     <h1>⚡ Electron Screen Recorder</h1>
+    <span> Connection: </span> <button id="c-status" class="notc"></button>
     <div class="container">
       <button id="videoSelectBtn" class="button is-text">
         Choose a Video Source
@@ -22,6 +24,7 @@
 
     <button id="startBtn" class="button is-primary">Start</button>
     <button id="stopBtn" class="button is-warning">Stop</button>
+    <video id="preview"></video>
 
     <hr />
   </body>

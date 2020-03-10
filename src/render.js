@@ -1,10 +1,33 @@
 const videoSelectBtn = document.getElementById("videoSelectBtn");
 const videoElement = document.getElementById("videoElem");
 const timeElement = document.getElementById("time");
+const previewE = document.getElementById("preview");
+const connectionStatus = document.getElementById("c-status");
 videoSelectBtn.onclick = getVideoSources;
 const { writeFile } = require("fs");
 const { desktopCapturer, remote } = require("electron");
 const { dialog, Menu } = remote;
+const io = require("socket.io-client");
+
+var socket = io("http://localhost:4000");
+socket.on("welcome", data => {
+  connectionStatus.classList.add("connect");
+  console.log(data);
+});
+
+socket.on("disconnect", () => {
+  connectionStatus.classList.remove("connect");
+});
+
+socket.on("broadcast", data => {
+  const blob = new Blob([data], {
+    type: "video/webm; codecs=vp9"
+  });
+  console.log(blob);
+  previewE.src = window.URL.createObjectURL(blob);
+  previewE.loop = true;
+  previewE.play();
+});
 
 let duration = 0;
 let isCounting = false;
@@ -26,7 +49,7 @@ async function getVideoSources() {
 }
 
 let mediaRecorder; // MediaRecorder instance to capture footage
-const recordedChunks = [];
+let recordedChunks = [];
 
 selectSource({ id: "screen:0:0", name: "Entire Screen" });
 videoSelectBtn.innerText = "Select Media";
@@ -61,10 +84,18 @@ async function selectSource(source) {
   mediaRecorder.onstop = handleStop;
 }
 
+const startRecording = () => {
+  mediaRecorder.start();
+  return setInterval(function() {
+    mediaRecorder.stop();
+    mediaRecorder.start();
+  }, 1000);
+};
+let stopId;
 let timerId;
 const startBtn = document.getElementById("startBtn");
 startBtn.onclick = e => {
-  mediaRecorder.start();
+  stopId = startRecording();
   startBtn.classList.add("is-danger");
   startBtn.innerText = "Recording";
   duration = 0;
@@ -85,6 +116,7 @@ stopBtn.onclick = e => {
   mediaRecorder.stop();
   startBtn.classList.remove("is-danger");
   startBtn.innerText = "Start";
+  clearInterval(stopId);
   clearInterval(timerId);
 };
 
@@ -101,13 +133,14 @@ async function handleStop(e) {
   });
 
   const buffer = Buffer.from(await blob.arrayBuffer());
+  socket.emit("stream", buffer);
+  recordedChunks = [];
+  // const { filePath } = await dialog.showSaveDialog({
+  //   buttonLabel: "Save video",
+  //   defaultPath: `vid-${Date.now()}.webm`
+  // });
 
-  const { filePath } = await dialog.showSaveDialog({
-    buttonLabel: "Save video",
-    defaultPath: `vid-${Date.now()}.webm`
-  });
+  // console.log(filePath);
 
-  console.log(filePath);
-
-  writeFile(filePath, buffer, () => console.log("video saved successfully!"));
+  // writeFile(filePath, buffer, () => console.log("video saved successfully!"));
 }
